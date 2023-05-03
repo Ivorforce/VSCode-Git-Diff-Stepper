@@ -45,14 +45,16 @@ export default class DiffAnnotator {
 			let oldFilePos = Number(infoResult[1]) - 1;
 			let delCount = infoResult[2] ? Number(infoResult[2]) : 1;
             if (delCount === 0) {
-                // Bugged: https://lore.kernel.org/git/?t=20230503204901
-                oldFilePos += 1;
+                // See https://man7.org/linux/man-pages/man1/diff.1p.html#:~:text=If%20a%20range%20is%20empty,empty%20range%20starts%20the%20file
+                // It's the previous line, unless it starts the file, in which case it's 0.
+                oldFilePos = Math.min(oldFilePos + 1, doc.lineCount - 1);
             }
 
 			let newFilePos = Number(infoResult[3]) - 1;
 			let addCount = infoResult[4] ? Number(infoResult[4]) : 1;
 
             let diffPatchAddStart = i + 1 + delCount;
+            // TODO Should probably be eol sensitive...
             let replacement = addCount > 0 ? lines.slice(diffPatchAddStart, diffPatchAddStart + addCount).map(x => x.slice(1)).join("\n") + "\n" : "";
 
             // If we need to insert at the end of the file, just use the last line's end

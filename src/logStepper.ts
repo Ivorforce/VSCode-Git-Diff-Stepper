@@ -89,12 +89,7 @@ export default class DiffEditorInfo {
             return;  // TODO Remove decorations, animate
         }
         else {
-            // TODO Instead, replay animations backwards
-            const commitList = await DiffEditorInfo.getCommitList(this.filePath);
-            const currentVersionIdx = commitList.indexOf(this.currentVersion);
-            if (currentVersionIdx + 1 < commitList.length) {
-                await this.setNextVersion(commitList[currentVersionIdx - 1]);
-            }
+            // TODO replay animations backwards
         }
     }
 }
