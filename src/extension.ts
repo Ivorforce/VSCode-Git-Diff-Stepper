@@ -5,13 +5,6 @@ import DiffEditorInfo from './logStepper';
 
 export let infosOfControlledEditors: DiffEditorInfo[] = [];
 
-export const addDecorationType = vscode.window.createTextEditorDecorationType({
-	overviewRulerColor: 'green',
-	overviewRulerLane: vscode.OverviewRulerLane.Right,
-	isWholeLine: true,
-	backgroundColor: "rgba(0, 255, 0, 0.1)",
-});
-
 export const delDecorationType = vscode.window.createTextEditorDecorationType({
 	overviewRulerColor: 'red',
 	overviewRulerLane: vscode.OverviewRulerLane.Right,
@@ -45,6 +38,10 @@ export function activate(context: vscode.ExtensionContext) {
 		let info = infoForEditor(vscode.window.activeTextEditor);
 		if (!info) { return; }
 		await info.stepNext();
+	}));
+
+	context.subscriptions.push(vscode.commands.registerCommand('git-diff-stepper.foo', async () => {
+		console.log("Bar!");
 	}));
 }
 

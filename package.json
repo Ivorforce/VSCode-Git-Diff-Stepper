@@ -9,7 +9,9 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onLanguage:python"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
@@ -22,6 +24,9 @@
       }, {
         "command": "git-diff-stepper.nextVersion",
         "title": "Git Diff Stepper: Next"
+      }, {
+        "command": "git-diff-stepper.foo",
+        "title": "Foo"
       }
     ]
   },
@@ -45,5 +50,6 @@
     "mocha": "^10.2.0",
     "typescript": "^5.0.4",
     "@vscode/test-electron": "^2.3.0"
-  }
+  },
+  "enabledApiProposals": ["editorInsets"]
 }

@@ -1,9 +1,6 @@
 import * as vscode from 'vscode';
-import { addDecorationType, delDecorationType } from './extension';
-
-// Note: Idxs start at 1
-export const diffHeaderRegexInline = /@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/;
-export const diffHeaderRegex = /\n@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/g;
+import { delDecorationType } from './extension';
+import Patch from './patch';
 
 function range (start: number, end: number) { return [...Array(1+end-start).keys()].map(v => start+v) } 
 
@@ -13,16 +10,17 @@ function endOfDocument(document: vscode.TextDocument) : vscode.Position {
 
 export default class DiffAnnotator {
     public editorRef: vscode.TextEditor;
-    public currentDiff?: string;
+    public currentDiff: Patch[] = [];
+
+    public insets: vscode.WebviewEditorInset[] = [];
 
     constructor(editorRef: vscode.TextEditor) {
         this.editorRef = editorRef;
     }
 
     public async discardCurrentDiff() {
-        this.currentDiff = undefined;
+        this.currentDiff = [];
         this.editorRef.setDecorations(delDecorationType, []);
-        this.editorRef.setDecorations(addDecorationType, []);
         // TODO Animate
     }
 
@@ -34,35 +32,16 @@ export default class DiffAnnotator {
         let doc = this.editorRef.document;
         let edits: [vscode.Range, string][] = []; 
 
-        let lines = this.currentDiff.split("\n");
-
-        for (let i = 0; i < lines.length; i++) {
-            let infoResult = diffHeaderRegexInline.exec(lines[i]);
-            if (!infoResult) {
-                continue;
-            }
-
-			let oldFilePos = Number(infoResult[1]) - 1;
-			let delCount = infoResult[2] ? Number(infoResult[2]) : 1;
-            if (delCount === 0) {
-                // See https://man7.org/linux/man-pages/man1/diff.1p.html#:~:text=If%20a%20range%20is%20empty,empty%20range%20starts%20the%20file
-                // It's the previous line, unless it starts the file, in which case it's 0.
-                oldFilePos = Math.min(oldFilePos + 1, doc.lineCount - 1);
-            }
-
-			let newFilePos = Number(infoResult[3]) - 1;
-			let addCount = infoResult[4] ? Number(infoResult[4]) : 1;
-
-            let diffPatchAddStart = i + 1 + delCount;
+        for (let patch of this.currentDiff) {
             // TODO Should probably be eol sensitive...
-            let replacement = addCount > 0 ? lines.slice(diffPatchAddStart, diffPatchAddStart + addCount).map(x => x.slice(1)).join("\n") + "\n" : "";
+            let replacement = patch.addCount > 0 ? patch.addedLines.join("\n") + "\n" : "";
 
             // If we need to insert at the end of the file, just use the last line's end
-            let removeStart = doc.lineCount === oldFilePos ? endOfDocument(doc) : doc.lineAt(oldFilePos).rangeIncludingLineBreak.start;
+            let removeStart = doc.lineCount === patch.oldFilePos ? endOfDocument(doc) : doc.lineAt(patch.oldFilePos).rangeIncludingLineBreak.start;
 
-            if (delCount > 0) {
+            if (patch.delCount > 0) {
                 // Use the start of the next line if available, otherwise just delete till the end.
-                let removeEnd = doc.lineAt(oldFilePos + delCount - 1).rangeIncludingLineBreak.end;
+                let removeEnd = doc.lineAt(patch.oldFilePos + patch.delCount - 1).rangeIncludingLineBreak.end;
     
                 edits.push([new vscode.Range(removeStart, removeEnd), replacement]);    
             }
@@ -77,40 +56,40 @@ export default class DiffAnnotator {
             }
         });
 
-        this.currentDiff = undefined;
-        this.editorRef.setDecorations(addDecorationType, []);
+        this.currentDiff = [];
 
         // TODO Animate Away
         this.editorRef.setDecorations(delDecorationType, []);
+
+        // Will auto-remove themselves on discard.
+        this.insets.forEach(x => x.dispose());
+        this.insets = [];
     }
 
-    public async setCurrentDiff(diff: string) {
+    public async setCurrentDiff(patches: Patch[]) {
         if (this.currentDiff) {
             this.discardCurrentDiff();
         }
 
-        this.currentDiff = diff;
+        this.currentDiff = patches;
 
         // Insert annotations
 
-		const adds: [number, number][] = [];
 		const dels: vscode.Range[] = [];
 
-		var infoResult;
-		while((infoResult = diffHeaderRegex.exec(diff)) !== null) {
-			let oldFilePos = Number(infoResult[1]) - 1;
-			let delCount = infoResult[2] ? Number(infoResult[2]) : 1;
-
-			let newFilePos = Number(infoResult[3]) - 1;
-			let addCount = infoResult[4] ? Number(infoResult[4]) : 1;
-
-            if (delCount > 0) {
+		for (let patch of patches) {
+            if (patch.delCount > 0) {
                 dels.push(new vscode.Range(
-                    this.editorRef.document.lineAt(oldFilePos).range.start,
-                    this.editorRef.document.lineAt(oldFilePos + delCount - 1).range.end
+                    this.editorRef.document.lineAt(patch.oldFilePos).range.start,
+                    this.editorRef.document.lineAt(patch.oldFilePos + patch.delCount - 1).range.end
                 ));
             }
-            // TODO Animate in Add-Annotations
+            if (patch.addCount > 0) {
+                const inset = vscode.window.createWebviewTextEditorInset(this.editorRef, patch.oldFilePos, patch.addCount);
+                inset.webview.html = patch.addedLines.join("<br/>");
+                this.insets.push(inset);
+                console.log(`Inset: ${inset}`);
+            }
 		}
 
 		this.editorRef.setDecorations(delDecorationType, dels);

@@ -2,6 +2,7 @@ import * as vscode from 'vscode';
 import path = require('path');
 import util = require('util');
 import DiffAnnotator from './diffAnnotator';
+import { parsePatches } from './patch';
 const exec = util.promisify(require('child_process').exec);
 
 
@@ -60,7 +61,7 @@ export default class DiffEditorInfo {
 
         this.nextVersion = nextVersion;
         const { stdout, stderr } = await exec(`git --no-pager diff -U0 ${this.currentVersion} ${nextVersion} -- ${filename}`, {cwd: parent});
-        const diff = stdout;
+        const diff = parsePatches(stdout);
 
 		await this.annotator.setCurrentDiff(diff);
     }
