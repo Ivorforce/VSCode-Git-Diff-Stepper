@@ -1,5 +1,5 @@
 import * as vscode from 'vscode';
-import { delDecorationType } from './extension';
+import { delDecorationType, mediaUri } from './extension';
 import Patch from './patch';
 
 function range (start: number, end: number) { return [...Array(1+end-start).keys()].map(v => start+v) } 
@@ -9,12 +9,14 @@ function endOfDocument(document: vscode.TextDocument) : vscode.Position {
 }
 
 export default class DiffAnnotator {
+    public styleUri: vscode.Uri;
     public editorRef: vscode.TextEditor;
     public currentDiff: Patch[] = [];
 
     public insets: vscode.WebviewEditorInset[] = [];
 
-    constructor(editorRef: vscode.TextEditor) {
+    constructor(styleUri: vscode.Uri, editorRef: vscode.TextEditor) {
+        this.styleUri = styleUri;
         this.editorRef = editorRef;
     }
 
@@ -85,10 +87,25 @@ export default class DiffAnnotator {
                 ));
             }
             if (patch.addCount > 0) {
-                const inset = vscode.window.createWebviewTextEditorInset(this.editorRef, patch.oldFilePos, patch.addCount);
-                inset.webview.html = patch.addedLines.join("<br/>");
+                const inset = vscode.window.createWebviewTextEditorInset(this.editorRef, patch.oldFilePos, patch.addCount, {
+                    // Only allow the webview to access resources in our extension's media directory
+                    localResourceRoots: [mediaUri]
+                  });
+                const myStyle = inset.webview.asWebviewUri(this.styleUri);
+                console.log(this.styleUri);
+                console.log(myStyle);
+                inset.webview.html = `
+                <!DOCTYPE html>
+                <html>
+                    <head>
+                      <link href="${myStyle}" rel="stylesheet" />
+                    </head>
+                    <body>
+                      ${patch.addedLines.join("<br/>")}
+                    </body>
+                 </html>
+        `;
                 this.insets.push(inset);
-                console.log(`Inset: ${inset}`);
             }
 		}
 

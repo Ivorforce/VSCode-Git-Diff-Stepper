@@ -36,7 +36,7 @@ export default class DiffEditorInfo {
 		return stdout;
     }
 
-    public static async create(fromEditor: vscode.TextEditor): Promise<DiffEditorInfo> {
+    public static async create(fromEditor: vscode.TextEditor, styleUri: vscode.Uri): Promise<DiffEditorInfo> {
 		let filePath = fromEditor.document.uri.fsPath;
 
 		const commitList = await this.getCommitList(filePath);
@@ -47,7 +47,7 @@ export default class DiffEditorInfo {
 			language: fromEditor.document.languageId,
 		});
 		const newEditor = await vscode.window.showTextDocument(document);
-        const annotator = new DiffAnnotator(newEditor);
+        const annotator = new DiffAnnotator(styleUri, newEditor);
         
         const info = new DiffEditorInfo(annotator, filePath, commitList[0]);
 

@@ -12,9 +12,14 @@ export const delDecorationType = vscode.window.createTextEditorDecorationType({
 	backgroundColor: "rgba(255, 0, 0, 0.1)",
 });
 
+export let mediaUri: vscode.Uri;
+
 // This method is called when your extension is activated
 // Your extension is activated the very first time the command is executed
 export function activate(context: vscode.ExtensionContext) {
+	const styleUri = vscode.Uri.joinPath(context.extensionUri, 'media', 'diffs.css');
+	mediaUri = vscode.Uri.joinPath(context.extensionUri, 'media');
+
 	context.subscriptions.push(vscode.commands.registerCommand('git-diff-stepper.openFileHistory', async () => {
 		// The code you place here will be executed every time your command is executed
 		// Display a message box to the user
@@ -24,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 			return;
 		}
 
-		let newInfo = await DiffEditorInfo.create(activeEditor);
+		let newInfo = await DiffEditorInfo.create(activeEditor, styleUri);
 		infosOfControlledEditors.push(newInfo);
 	}));
 
