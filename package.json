@@ -24,9 +24,6 @@
       }, {
         "command": "git-diff-stepper.nextVersion",
         "title": "Git Diff Stepper: Next"
-      }, {
-        "command": "git-diff-stepper.foo",
-        "title": "Foo"
       }
     ]
   },

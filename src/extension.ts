@@ -9,7 +9,7 @@ export const delDecorationType = vscode.window.createTextEditorDecorationType({
 	overviewRulerColor: 'red',
 	overviewRulerLane: vscode.OverviewRulerLane.Right,
 	isWholeLine: true,
-	backgroundColor: "rgba(255, 0, 0, 0.1)",
+	backgroundColor: "rgba(255, 0, 0, 0.15)",
 });
 
 export let mediaUri: vscode.Uri;
@@ -43,10 +43,6 @@ export function activate(context: vscode.ExtensionContext) {
 		let info = infoForEditor(vscode.window.activeTextEditor);
 		if (!info) { return; }
 		await info.stepNext();
-	}));
-
-	context.subscriptions.push(vscode.commands.registerCommand('git-diff-stepper.foo', async () => {
-		console.log("Bar!");
 	}));
 }
 
