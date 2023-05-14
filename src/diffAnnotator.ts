@@ -88,12 +88,11 @@ export default class DiffAnnotator {
             }
             if (patch.addCount > 0) {
                 const inset = vscode.window.createWebviewTextEditorInset(this.editorRef, patch.oldFilePos, patch.addCount, {
-                    // Only allow the webview to access resources in our extension's media directory
+                    // At least in this function, localResourceRoots defaults to 'no access to anything', as far as I can tell.
+                    // This fixes the "asWebviewUri" call.
                     localResourceRoots: [mediaUri]
                   });
                 const myStyle = inset.webview.asWebviewUri(this.styleUri);
-                console.log(this.styleUri);
-                console.log(myStyle);
                 inset.webview.html = `
                 <!DOCTYPE html>
                 <html>
