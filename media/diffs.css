@@ -1,5 +1,10 @@
 body {
     padding: 0;
     background-color: rgba(0, 255, 0, 0.1);
+    
     font-family: "SF Mono",Monaco,Menlo,Courier,monospace;
+    font-size: 12px;
+    font-feature-settings: "Liga" 0, "calt" 0;
+    font-variation-settings: normal;
+    line-height: 18px;
 }
