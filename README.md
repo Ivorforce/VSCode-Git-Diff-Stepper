@@ -2,6 +2,8 @@
 
 A plugin to step through the git history of a file using `git-diff`.
 
+This is not in active development: VSCode doesn't expose a way to create editors in insets, and that [won't change in the near future](https://github.com/microsoft/vscode/issues/153198). Check out the standalone application instead: [Git Diff Stepper](https://github.com/Ivorforce/Git-Diff-Stepper).
+
 ## Features
 
 Open a file and run `Git Diff Stepper: Begin` from the command palette. Then, run `Git Diff Stepper: Next` and `Git Diff Stepper: Previouis` to step through the iterations. I recommend setting shortcuts for these actions.
